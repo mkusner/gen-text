@@ -1,0 +1,31 @@
+
+\section{Gumbel-softmax distribution}
+
+The Gumbel softmax distribution 
+
+The softmax function can be used to parameterized a multi-nomial distribution
+on a one-hot-encoding $d$-dimensional vectors $\mathbf{y}$ in terms of a
+continuous $d$-dimensional vector $\mathbf{x}$ as follows:
+\begin{align}
+p(y_i=1) = \frac{\exp(\mathbf{x}_i)}{\sum_{j=1}^K\exp(\mathbf{x}_j)}\,.
+\end{align}
+You can show that this generative process for $\mathbf{y}$ is the same as
+\begin{align}
+\mathbf{y} = \text{one\_hot}(\underset{i}{\arg\max} (x_i + z_i))\,,\label{eq:1}
+\end{align}
+where the $z_i$ are independent and follow a Gumbel distribution with zero
+location and unit scale.
+
+The sample generated in (\ref{eq:1}) has gradient zero with respect to
+$\mathbf{x}$ because the $\text{one\_hot}(\underset{i}{\arg\max}(\cdot)$
+operator is not differentiable.
+
+We propose to approximate this operator with a differentiable function based on the soft-max function.
+In particular, we approximate $\mathbf{y}$ with 
+\begin{align}
+\mathbf{y} = \text{softmax}(1 / \tau (\mathbf{x} + \mathbf{z})))\,,\label{eq:2}
+\end{align}
+
+
+
+
