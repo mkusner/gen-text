@@ -1,1 +1,138 @@
 \section{Experiments}
+
+
+
+TODO:
+MLE, samples
+1, plot, samples
+2, plot, samples
+13,plot, samples
+19,plot, samples
+JUST LSTM
+
+
+For learning a generative model for discrete sequences
+
+
+Generating text from MLE LSTM S=10...
+x+x+x+x x   x  
+x-x-x+x x      
+x-x/x*x x x x x
+x-x+x-x x x    
+x/x/x+x x   x  
+x-x-x*x x   x  
+x+x-x+x x      
+x+x-x-x   x    
+x/x-x*x x x    
+x*x-x+x x x   x
+x/x/x-x x     x
+x/x*x-x x x    
+x+x/x*x x      
+x-x/x/x x x    
+x/x*x*x x x    
+x/x/x*x x x   x
+x-x/x*x   x x x
+x-x+x+x x x    
+x/x-x+x x x x  
+x-x/x/x   x x  
+
+
+
+
+count=1
+dis loss=0.735004213271
+gen loss=1.56914517581
+-x+x***- *xxx  
++*x- -x+*xx*x x
+*-x-/*x*xxx    
+-x-x/x+x-   -  
+  x-x-x+x-x--- 
+- +x*x x     x 
+-x-x- - -+xx/x 
+/+ x  *  *     
+x+xx/-/x*x-x   
+ x*x*x*x-xx*-  
+x--+xxx-x x   -
+ +/+x*x x  /+- 
+ +x+++x---x/xx 
+-x    + *  /   
+ --+*-x*x+x- / 
+-x-+*x* -+     
+--x-x*-*x-x    
+* /x- - +x-    
+*+x--/x+x/x *  
+**+-* xxx x-+  
+count=2
+dis loss=0.00017594737901
+gen loss=8.9916148922
+  xxxxx*x-*x+xx
+x*-+x x*--x*/*x
+x-xxxxx*xx*/xx*
+ -x//x*//x*xx/x
+ ** -x-xxxx/xx*
+/+/x*-xx/*- xxx
+  /*x*xx*x*//-x
+x/x*x/x xx*xx+x
+-/**+xxx-xxxx/x
+x//xxxxxx+x*xxx
+/-x/+*xxxx-+/-x
+ xxxx*x/x*x/xx-
+xxxxxx*+*/xxxx+
+/xx*-xxx/x*xxx*
+ +x/x*x**+*x/x+
+ --x** */xxx*x*
+*-xxxxx* xxxxx-
+/*++x+xxxxx/+x+
+x+x-x//+xx**+xx
+/xxxx+x+x/xxx+x
+
+
+
+count=13
+dis loss=1.0772071672
+gen loss=1.1372522259
+*x+/  +    x*  
+x      - -  */ 
+ /x     / *    
+x+-*x+x-x-x*x+*
++ x *   +      
+-          * - 
+x  -x*/-x-  -- 
+  x///x x  /++ 
+-/x/x/x-    -/ 
+x//-xxx/x/*/  x
+*--x/x*- *-x   
+/x  +/-* *     
++ --x*-**/x*x /
++   -   *      
+/ -x+/+/+x  /  
+ x-x*x/x+x     
+x+x   x+   + x 
+ +-  +        x
+  x-x+x*       
+x x        x /-
+
+
+count=19
+dis loss=0.902342276036
+gen loss=1.06844680703
+x+x//*x   *-   
+//- x+/x x /x  
++ *x*x  x x//  
+-x+xx//x*//    
+/x-x/-  * /    
+x/x+/x* - +   *
+x//- ///x      
+x/x x*x / x  x 
++x*x/x/x     x/
+/* x+  x      -
+xxx+/x+x/x    +
+/x x+x+x*x*x +-
+x*-+x/* //x x *
+x+x*x *-  x +  
+ **x+x-x       
+*x*x+x*xx /    
+x-x+x-*/x+x+   
+*/xx+ x /  x * 
+-*+*x x + x+   
+++*x x*x   - + 

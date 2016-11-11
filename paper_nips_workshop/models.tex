@@ -16,9 +16,39 @@ In this section we describe how to construct a generative adversarial network (G
 
 Our generative model is based on a Long Short Term Memory (LSTM) recurrent neural network \cite{hochreiter1997long}, shown in the top of Figure~\ref{figure.prediction}. Specifically, an LSTM can be constructed to sequentially predict the next element in a discrete sequence, given the previous elements. Instead, our generative model takes as input a sample-pair which effectively replace the initial cell and hidden states. From this sample our generator constructs a sequence by successively feeding its predictions as input to the following LSTM unit. The immediate difficulty is how to train this generative network to sample realistic sequences.
 
-Given a set of $n$ data points $\{ \x_1, \x_2 \ldots, \x_n\}$ independently and identically drawn from a $d$-dimensional distribution $p(\x)$, the goal of generative modeling is to learn a distribution $q(\x)$ that accuratley approximates $p(\x)$. The framework of generative adversarial modeling has been shown to yield models $q(\x)$ that generate amazingly realistic data points. The adversarial training idea is straight-forward. First, we are going to learn a so-called \emph{generator} $G$ that transforms samples from a simple, known distribution (e.g., a uniform or Gaussian distribution) into samples that approximate those drawn from $p(\x)$. Specifically, we define $q(\x) := G(\z)$, where $\z \sim U(0,1)^d$ (we define $U(0,1)^d$ as the $d$-dimensional )
+\subsection*{Generative adversarial modeling}
+
+Given a set of $n$ data points $\{ \x_1, \x_2 \ldots, \x_n\}$ independently and identically drawn from a $d$-dimensional distribution $p(\x)$ over the reals, the goal of generative modeling is to learn a distribution $q(\x)$ that accuratley approximates $p(\x)$. The framework of generative adversarial modeling has been shown to yield models $q(\x)$ that generate amazingly realistic data points. The adversarial training idea is straight-forward. First, we are going to learn a so-called \emph{generator} $G$ that transforms samples from a simple, known distribution (e.g., a uniform or Gaussian distribution) into samples that approximate those drawn from $p(\x)$. Specifically, we define $q(\x) := G(\z)$, where $\z \sim U(0,1)^d$ (let $U(0,1)^d$ be the $d$-dimensional uniform distribution on the interval $[0,1]$). Second, to learn $G$ we will introduce a classifier we call the \emph{discriminator} $D$. The discriminator takes as input any real $d$-dimensional vector (this could be a generated input $G(\z)$ or a real one $\x$) and predicts the probability that the input is actually drawn from the real distribution $p(\x)$. It will be trained to take samples $G(\z)$ and real inputs $\x$ and accurately distinguish them. At the same time, the generator $G$ is trained so that it can fool the discriminator $D$ into thinking that a fake point it generated is real with high probability. Initially, the discriminator will be able to easily tell the fake points from the real ones and the generator is poor. However, as training progresses the generator uses this signal from the discriminator to determine how to generate more realistic samples. Eventually, the generator will generate samples so real that the discriminator will have a random chance of guessing if a generated point is real.
+
+In the majority of the prior work, $G$ and $D$ are parameterized to be neural networks. Here $G$ and $D$ are both LSTMs with weight matrices $\Theta$ and $\Phi$, respectfully. We describe our adversarial training procedure in Algorithm~\ref{alg}, inspired by recent work on GANs \cite{sonderby2016amortised}. This algorithm can be shown in expectation to minimize the KL-divergence between $q(\z) \!=\! G(\z)$ and $p(\x)$.
 
 
+%\begin{wrapfigure}{R}{0.45\textwidth}
+%\vspace{-5ex}
+% \begin{minipage}{0.45\textwidth}
+\begin{algorithm}[H]                      % enter the algorithm environment
+\caption{Generative Adversarial Network \cite{sonderby2016amortised}}          % give the algorithm a caption
+\label{alg}                           % and a label for \ref{} commands later in the document
+\begin{algorithmic}[1]                    % enter the algorithmic environment
+%	\STATE \textbf{Input:} $\Vc$; $\Lambda \subseteq \mathbb{R}^d$; $T$; $(\epsilon,\delta)$; $\sigma^2_{\Vc,0}$; $\gamma_T$
+%	\STATE $\mu_{\Vc,0} = 0$
+	\STATE \textbf{data:} $\{ \x_1, \ldots, \x_n\} \sim p(\x)$,
+	\STATE Generative LSTM network $G_\Theta$
+	\STATE Discriminative LSTM network $D_\Phi$
+	\WHILE{ loop until convergence }
+		\STATE Sample mini-batch of inputs $B = \{\x_{B_1}, \ldots, \x_{B_m} \}$
+		\STATE Sample noise $N = \{\z_{N_1}, \ldots, \z_{N_m}\}$
+		\STATE Update discriminator $\Phi = \argmin_\Phi -\frac{1}{m} \sum_{\x \in B} \log D_\Phi(\x) - \frac{1}{m} \sum_{\z \in N} \log(1 - D_\Phi(G_\Theta(\z)))$
+		\STATE Update generator $\Theta = \argmin_\Theta - \frac{1}{m} \sum_{\z \in N} \log \frac{D_\Phi(G_\Theta(\z))}{1-D_\Phi(G_\Theta(\z))}$
+	\ENDWHILE
+%	\STATE \textbf{Return:} $\tilde{\lambda},\tilde{v}$
+\end{algorithmic}
+\end{algorithm}
+% \end{minipage}
+%\vspace{-4ex}
+%\end{wrapfigure}
+
+Figure~\ref{figure.adversarial} shows a schematic of the adversarial training procedure for discrete sequences.
 
 
 \begin{figure*}[t!]
@@ -30,139 +60,3 @@ Given a set of $n$ data points $\{ \x_1, \x_2 \ldots, \x_n\}$ independently and 
 \label{figure.adversarial}
 \end{center}
 \end{figure*}
-
-
-TODO:
-MLE, samples
-1, plot, samples
-2, plot, samples
-13,plot, samples
-19,plot, samples
-JUST LSTM
-
-
-For learning a generative model for discrete sequences
-
-
-Generating text from MLE LSTM S=10...
-x+x+x+x x   x  
-x-x-x+x x      
-x-x/x*x x x x x
-x-x+x-x x x    
-x/x/x+x x   x  
-x-x-x*x x   x  
-x+x-x+x x      
-x+x-x-x   x    
-x/x-x*x x x    
-x*x-x+x x x   x
-x/x/x-x x     x
-x/x*x-x x x    
-x+x/x*x x      
-x-x/x/x x x    
-x/x*x*x x x    
-x/x/x*x x x   x
-x-x/x*x   x x x
-x-x+x+x x x    
-x/x-x+x x x x  
-x-x/x/x   x x  
-
-
-
-
-count=1
-dis loss=0.735004213271
-gen loss=1.56914517581
--x+x***- *xxx  
-+*x- -x+*xx*x x
-*-x-/*x*xxx    
--x-x/x+x-   -  
-  x-x-x+x-x--- 
-- +x*x x     x 
--x-x- - -+xx/x 
-/+ x  *  *     
-x+xx/-/x*x-x   
- x*x*x*x-xx*-  
-x--+xxx-x x   -
- +/+x*x x  /+- 
- +x+++x---x/xx 
--x    + *  /   
- --+*-x*x+x- / 
--x-+*x* -+     
---x-x*-*x-x    
-* /x- - +x-    
-*+x--/x+x/x *  
-**+-* xxx x-+  
-count=2
-dis loss=0.00017594737901
-gen loss=8.9916148922
-  xxxxx*x-*x+xx
-x*-+x x*--x*/*x
-x-xxxxx*xx*/xx*
- -x//x*//x*xx/x
- ** -x-xxxx/xx*
-/+/x*-xx/*- xxx
-  /*x*xx*x*//-x
-x/x*x/x xx*xx+x
--/**+xxx-xxxx/x
-x//xxxxxx+x*xxx
-/-x/+*xxxx-+/-x
- xxxx*x/x*x/xx-
-xxxxxx*+*/xxxx+
-/xx*-xxx/x*xxx*
- +x/x*x**+*x/x+
- --x** */xxx*x*
-*-xxxxx* xxxxx-
-/*++x+xxxxx/+x+
-x+x-x//+xx**+xx
-/xxxx+x+x/xxx+x
-
-
-
-count=13
-dis loss=1.0772071672
-gen loss=1.1372522259
-*x+/  +    x*  
-x      - -  */ 
- /x     / *    
-x+-*x+x-x-x*x+*
-+ x *   +      
--          * - 
-x  -x*/-x-  -- 
-  x///x x  /++ 
--/x/x/x-    -/ 
-x//-xxx/x/*/  x
-*--x/x*- *-x   
-/x  +/-* *     
-+ --x*-**/x*x /
-+   -   *      
-/ -x+/+/+x  /  
- x-x*x/x+x     
-x+x   x+   + x 
- +-  +        x
-  x-x+x*       
-x x        x /-
-
-
-count=19
-dis loss=0.902342276036
-gen loss=1.06844680703
-x+x//*x   *-   
-//- x+/x x /x  
-+ *x*x  x x//  
--x+xx//x*//    
-/x-x/-  * /    
-x/x+/x* - +   *
-x//- ///x      
-x/x x*x / x  x 
-+x*x/x/x     x/
-/* x+  x      -
-xxx+/x+x/x    +
-/x x+x+x*x*x +-
-x*-+x/* //x x *
-x+x*x *-  x +  
- **x+x-x       
-*x*x+x*xx /    
-x-x+x-*/x+x+   
-*/xx+ x /  x * 
--*+*x x + x+   
-++*x x*x   - + 
