@@ -2,7 +2,7 @@
 
 Generative adversarial networks (GANs) are methods for generating synthetic
 data with similar statistical properties as the real one
-\cite{goodfellow2014generative}. In a GAN, a discriminative neural network D is
+\cite{goodfellow2014generative}. In the GAN methodology a discriminative neural network D is
 trained to distinguish whether a given data instance is synthetic or real,
 while a generative network G is jointly trained to confuse D by generating high
 quality data. This approach has been very sucessful in computer vision tasks for
@@ -13,22 +13,16 @@ GANs work by propagating gradients back from the discriminator D through the
 generated samples to the generator G. This is perfectly feasible when the
 generated data is continuous such as in the examples with images mentioned
 above. However, a lot of data exists in the form of squences of discrete items.
-For example, text, molecules encoded in the SMILE language, etc. In these
+For example, text sentences \cite{Bowman2016}, molecules encoded in the SMILE language \cite{gomez2016automatic}, etc. In these
 cases, the discrete data is not differentiable and the backpropagated gradients
 are always zero. 
 
-Discrete data, encoded as a one-hot-encoding, can be sampled from a multinomial
-distribution with probabilities given by a softmax function applied to a real
-vector of parameter values. We approximate this discrete sampling process
-by sampling from the Gumbel-softmax distribution \cite{jang2016categorical}.
-
-one-hot-encoded discrete data with
-continuous vectors that live in the simplex by using the 
-
-shown to be the result of
-adding Gumbel noise to the real vector and then applying the argmax operator
-followed by the one-hot-encoding operator.
-
-
-To avoid this problem, we propose to use the 
+Discrete data, encoded using a one-hot representation, can be sampled from a
+multinomial distribution with probabilities given by the output of a softmax
+function. The resulting sampling process is not differentiable.  However, we can obtain
+a differentiable approximation by sampling from the Gumbel-softmax distribution
+\cite{jang2016categorical}. This distribution has been previously used to train
+variatoinal autoencoders with discrete latent variables \cite{jang2016categorical}. Here, we propose to
+use it to train GANs on sequences of discrete tokens and we evaluate its
+performance in this setting.
 
