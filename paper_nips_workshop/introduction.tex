@@ -3,21 +3,32 @@
 Generative adversarial networks (GANs) are methods for generating synthetic
 data with similar statistical properties as the real one
 \cite{goodfellow2014generative}. In a GAN, a discriminative neural network D is
-trained to distinguish whether a given data instance is synthetic or real, while a
-generative network G is jointly trained to confuse D by generating high quality
-data. This approach has been very sucessful in computer vision tasks of
-generating samples of natural images \cite{denton2015deep,dosovitskiy2016generating,radford2016}.
+trained to distinguish whether a given data instance is synthetic or real,
+while a generative network G is jointly trained to confuse D by generating high
+quality data. This approach has been very sucessful in computer vision tasks for
+generating samples of natural images
+\cite{denton2015deep,dosovitskiy2016generating,radford2016}.
 
-They
+GANs work by propagating gradients back from the discriminator D through the
+generated samples to the generator G. This is perfectly feasible when the
+generated data is continuous such as in the examples with images mentioned
+above. However, a lot of data exists in the form of squences of discrete items.
+For example, text, molecules encoded in the SMILE language, etc. In these
+cases, the discrete data is not differentiable and the backpropagated gradients
+are always zero. 
+
+Discrete data, encoded as a one-hot-encoding, can be sampled from a multinomial
+distribution with probabilities given by a softmax function applied to a real
+vector of parameter values. We approximate this discrete sampling process
+by sampling from the Gumbel-softmax distribution \cite{jang2016categorical}.
+
+one-hot-encoded discrete data with
+continuous vectors that live in the simplex by using the 
+
+shown to be the result of
+adding Gumbel noise to the real vector and then applying the argmax operator
+followed by the one-hot-encoding operator.
 
 
-one is an important problem in unsupervised learning
-
-shown to  generative models
-in different domains.
-
-are 
-
-A task specific loss may not be directly
-available
+To avoid this problem, we propose to use the 
 
