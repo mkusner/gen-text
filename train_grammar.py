@@ -11,7 +11,7 @@ from molecules.utils import one_hot_array, one_hot_index, from_one_hot_array, \
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 
 import h5py
-
+import the_grammar as G
 ###NUM_EPOCHS = 1
 ###BATCH_SIZE = 600
 ###LATENT_DIM = 292
@@ -32,37 +32,39 @@ import h5py
 
 
 
-p = """S -> S '+' S
-S -> S '*' S
-S -> S '/' S
-S -> '(' S ')'
-S -> 'sin(' S ')'
-S -> 'exp(' S ')'
-S -> 'x'
-S -> '1'
-S -> '2'
-S -> '3'
-"""
+###p = """S -> S '+' S
+###S -> S '*' S
+###S -> S '/' S
+###S -> '(' S ')'
+###S -> 'sin(' S ')'
+###S -> 'exp(' S ')'
+###S -> 'x'
+###S -> '1'
+###S -> '2'
+###S -> '3'
+###"""
 
 
-rules = p.split('\n')
+rules = G.gram.split('\n')
 
 
-MAX_LEN = 7
+MAX_LEN = 15
 DIM = len(rules)
 LATENT = 2
-EPOCHS = 50
+EPOCHS = 10
 BATCH = 600
 
 
 def main():
 
-    h5f = h5py.File('eq_dataset.h5', 'r')
+    h5f = h5py.File('eq2_15_dataset.h5', 'r')
     data = h5f['data'][:]
     h5f.close()
 
     #model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h50_c123.hdf5'
-    model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h50_c113.hdf5'
+    #####model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h100_c123_cond20.hdf5'
+    model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h50_c123_cond.hdf5'
+    #model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h50_c113.hdf5'
     #args = get_arguments()
     #data_train, data_test, charset = load_dataset(args.data)
     model = MoleculeVAE()
