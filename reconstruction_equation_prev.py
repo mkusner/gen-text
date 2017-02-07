@@ -197,6 +197,7 @@ def two_D_plane(model, filename, point, args, mult):
         model.load(rules, BATCH, filename, latent_rep_size = args.latent_dim, max_length=MAX_LEN)
     else:
         raise ValueError("Model file %s doesn't exist" % filename)
+    pdb.set_trace()
     #z_strings = get_strings2(point)  #point.reshape(1, MAX_LEN, DIM))
     #n = z_strings.shape[0]
     #LENS = np.zeros((n,))

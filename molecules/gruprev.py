@@ -177,15 +177,15 @@ class GRUPrev(GRU):
 
             hh = self.activation(x_h + K.dot(r * h_tm1 * B_U[2], self.U_h) + prev_h)
         h = z * h_tm1 + (1 - z) * hh
-        # make sure to not always use training data! HERERERE TODO
-        #to_next_time = mask_samples(h, train_data, self.dim)
-        if K.learning_phase() == 0:
-            [A,B,C] = tf.py_func(cond_sample_np, [h, self.STACK, self.POINT, masks_K, rhs_map_K], tf.float32)
-            SAMP = list_of_t[0]
-            self.STACK = list_of_t[1]
-            self.POINT = list_of_t[2]
+        ## make sure to not always use training data! HERERERE TODO
+        to_next_time = mask_samples(h, train_data, self.dim)
+        #if K.learning_phase() == 0:
+        #    [A,B,C] = tf.py_func(cond_sample_np, [h, self.STACK, self.POINT, masks_K, rhs_map_K], tf.float32)
+        #    SAMP = list_of_t[0]
+        #    self.STACK = list_of_t[1]
+        #    self.POINT = list_of_t[2]
 
 
-        to_next_time = K.in_train_phase(mask_samples(h, train_data, self.dim),SAMP) 
+        #to_next_time = K.in_train_phase(mask_samples(h, train_data, self.dim),SAMP) 
         #return h, [h, to_next_time]
         return to_next_time, [h, to_next_time]
