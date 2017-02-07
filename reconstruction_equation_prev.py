@@ -191,6 +191,33 @@ def reconstruct(model, filename, XTR, XTE, args):
 ##    for i in range(6):
 ##        for j in range(6):
 
+
+def hard_sigmoid(x):
+    x = 0.2*x + 0.5
+    return np.clip(x, 0.0, 1.0)
+
+def numpy_decode(model, latent)
+    # model - keras model
+    # latent - numpy output from encoder
+    decoder = model.decoder
+    decoder.layers = decoder.layers[:-1]
+    inp = model.decoder.layers[0].input
+    next_to_last = vae.decoder.layers[-2].output
+    get_output_from_input = K.function([inp],[next_to_last])
+    output = get_output_from_input([latent])[0]     # (batch, max_len, D)
+
+    if on_gpu == 1:
+    else:
+    W_z = K.eval(model.decoder.layers[-1].W_z)
+    W_h = K.eval(model.decoder.layers[-1].W_h)
+    W_r = K.eval(model.decoder.layers[-1].W_r)
+    U_z = K.eval(model.decoder.layers[-1].U_z)
+    b_z = K.eval(model.decoder.layers[-1].W_z)
+    b_h = K.eval(model.decoder.layers[-1].b_h)
+    b_r = K.eval(model.decoder.layers[-1].b_r)
+    U_z = K.eval(model.decoder.layers[-1].U_z)
+
+
 # DO THIS!
 def two_D_plane(model, filename, point, args, mult):
     if os.path.isfile(filename):

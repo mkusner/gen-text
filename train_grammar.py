@@ -74,7 +74,7 @@ def main():
 
     #model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h50_c123.hdf5'
     #####model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h100_c123_cond20.hdf5'
-    model_save = '/Users/matthewkusner/Dropbox/gen-text/results/eq_prev_vae_h50_c123_cond_L' + str(args.latent_dim) + '.hdf5'
+    model_save = '/Users/matthewkusner/Dropbox/gen-text/results/eq_prev_train_vae_h50_c123_cond_L' + str(args.latent_dim) + '.hdf5'
     #model_save = '/Users/matthewkusner/Dropbox/gen-text/eq_vae_h50_c113.hdf5'
     #args = get_arguments()
     #data_train, data_test, charset = load_dataset(args.data)

@@ -28,19 +28,19 @@ class MoleculeVAE():
     
     def create(self,
                charset,
-               BATCH,
+               #BATCH,
                max_length = MAX_LEN,
                latent_rep_size = 2,
                weights_file = None):
         charset_length = len(charset)
         
-        #x = Input(shape=(max_length, charset_length))
-        x = Input(batch_shape=(BATCH, max_length, charset_length))
+        x = Input(shape=(max_length, charset_length))
+        #x = Input(batch_shape=(BATCH, max_length, charset_length))
         _, z = self._buildEncoder(x, latent_rep_size, max_length)
         self.encoder = Model(x, z)
 
-        #encoded_input = Input(shape=(latent_rep_size,))
-        encoded_input = Input(batch_shape=(BATCH, latent_rep_size))
+        encoded_input = Input(shape=(latent_rep_size,))
+        #encoded_input = Input(batch_shape=(BATCH, latent_rep_size))
         self.decoder = Model(
             input=[encoded_input,x],
             output=self._buildDecoder(
@@ -52,8 +52,8 @@ class MoleculeVAE():
             )
         )
 
-        #x1 = Input(shape=(max_length, charset_length))
-        x1 = Input(batch_shape=(BATCH, max_length, charset_length))
+        x1 = Input(shape=(max_length, charset_length))
+        #x1 = Input(batch_shape=(BATCH, max_length, charset_length))
         vae_loss, z1 = self._buildEncoder(x1, latent_rep_size, max_length)
         self.autoencoder = Model(
             input=x1,
@@ -67,8 +67,8 @@ class MoleculeVAE():
         )
 
 
-        #x2 = Input(shape=(max_length, charset_length))
-        x2 = Input(batch_shape=(BATCH, max_length, charset_length))
+        x2 = Input(shape=(max_length, charset_length))
+        #x2 = Input(batch_shape=(BATCH, max_length, charset_length))
         (z_m, z_l_v) = self._encoderMeanVar(x2, latent_rep_size, max_length)
         self.encoderMV = Model(input=x2, output=[z_m, z_l_v])
 
@@ -158,5 +158,6 @@ class MoleculeVAE():
     def save(self, filename):
         self.autoencoder.save_weights(filename)
     
-    def load(self, charset, batch, weights_file, latent_rep_size = 2, max_length=MAX_LEN):
-        self.create(charset, BATCH = batch, max_length = max_length, weights_file = weights_file, latent_rep_size = latent_rep_size)
+    def load(self, charset, weights_file, latent_rep_size = 2, max_length=MAX_LEN):
+        #self.create(charset, BATCH = batch, max_length = max_length, weights_file = weights_file, latent_rep_size = latent_rep_size)
+        self.create(charset, max_length = max_length, weights_file = weights_file, latent_rep_size = latent_rep_size)

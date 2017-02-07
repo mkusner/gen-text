@@ -12,9 +12,6 @@ ind_of_ind_K = K.variable(G.ind_of_ind)
 rhs_map_K    = K.variable(G.rhs_map_sparse)
 
 
-# TODO: DOESNT WORK BECAUSE NEED TO KEEP TRACK OF PRIOR NON-TERMINALS!
-# Right now I can't get training data in........ teacher forcing is tricky but can try using sampling for training????? Well actually can't differentiate....
-# will only be run during training
 def mask_samples(logits, x_true, DIM):
     # if training, x_true will be training data
     most_likely = K.argmax(x_true) # pick productions
@@ -27,57 +24,49 @@ def mask_samples(logits, x_true, DIM):
     return P2
 
 
-    #most_likely = tf.reshape(most_likely,[-1]) # flatten most_likely
-    #ix2 = tf.expand_dims(tf.gather(ind_of_ind_K, most_likely),1) # index ind_of_ind with res
-    #ix2 = tf.cast(ix2, tf.int32) # cast indices as ints 
-    #M2 = tf.gather_nd(masks_K, ix2) # get slices of masks_K with indices
-    #M3 = tf.reshape(M2, [-1,MAX_LEN,DIM])#K.int_shape(x_pred)) # reshape them
-    #P2 = tf.mul(K.exp(logits),M3) # apply them to the exp-predictions
-    #P2 = tf.div(P2,K.sum(P2,axis=-1,keepdims=True)) # normalize predictions
-    #return P2
 
 
 
-def cond_sample_np(x, STACK, POINT, masks, rhs_map_sparse): # (n,d)
-    #pdb.set_trace()
-    #x = K.eval(x)
-    shape = x.shape # (n,d)
-    samples = np.zeros((shape[0],shape[1]))
-    for i in range(shape[0]):
-        if POINT[i] == -1: # this check needs to be done in keras, this means we are done
-            samples[i,-1] = 1
-            continue
-        # 1. pop current nt off stack
-        current_nt = STACK[i,POINT[i]]
-        POINT[i] = POINT[i]-1 
-        the_mask = masks[current_nt]
-        #where_zero = np.where(the_mask == 0)[0]
-        #where = tf.equal(the_mask, zero)
-        the_mask[the_mask == 0] = -999 # hack to deal with gumbel noise making things negative
-        masked = x[i] * the_mask
-    
-        #softmax = masked / K.sum(masked, axis=-1)
-        # find tensorflow code for discrete distribution sampling or do gumbel trick
-        G = np.random.gumbel(size=x[i].shape)
-        noise_masked = G + masked
-        choice = np.argmax(noise_masked)
-        
-        # instead of making 1-hot, just put 1 in right place
-        # (if stack is empty then we will place nothing
-        # then we will look for all zero columns and put 1's at end, either in Keras or as post-processing        
-        samples[i,choice] = 1
-        
-        new_nts = np.where(rhs_map_sparse[choice] == 1)[0]
-        #new_nts = rhs_map_np[choice]
-        len_nts = len(new_nts)
-        #pdb.set_trace()
-        if len_nts == 0:
-            continue
-
-        STACK[i,POINT[i]+1:POINT[i]+1+len_nts] = np.flipud(new_nts)
-        POINT[i] = POINT[i]+len_nts
-
-    return [samples, STACK, POINT]
+###def cond_sample_np(x, STACK, POINT, masks, rhs_map_sparse): # (n,d)
+###    #pdb.set_trace()
+###    #x = K.eval(x)
+###    shape = x.shape # (n,d)
+###    samples = np.zeros((shape[0],shape[1]))
+###    for i in range(shape[0]):
+###        if POINT[i] == -1: # this check needs to be done in keras, this means we are done
+###            samples[i,-1] = 1
+###            continue
+###        # 1. pop current nt off stack
+###        current_nt = STACK[i,POINT[i]]
+###        POINT[i] = POINT[i]-1 
+###        the_mask = masks[current_nt]
+###        #where_zero = np.where(the_mask == 0)[0]
+###        #where = tf.equal(the_mask, zero)
+###        the_mask[the_mask == 0] = -999 # hack to deal with gumbel noise making things negative
+###        masked = x[i] * the_mask
+###    
+###        #softmax = masked / K.sum(masked, axis=-1)
+###        # find tensorflow code for discrete distribution sampling or do gumbel trick
+###        G = np.random.gumbel(size=x[i].shape)
+###        noise_masked = G + masked
+###        choice = np.argmax(noise_masked)
+###        
+###        # instead of making 1-hot, just put 1 in right place
+###        # (if stack is empty then we will place nothing
+###        # then we will look for all zero columns and put 1's at end, either in Keras or as post-processing        
+###        samples[i,choice] = 1
+###        
+###        new_nts = np.where(rhs_map_sparse[choice] == 1)[0]
+###        #new_nts = rhs_map_np[choice]
+###        len_nts = len(new_nts)
+###        #pdb.set_trace()
+###        if len_nts == 0:
+###            continue
+###
+###        STACK[i,POINT[i]+1:POINT[i]+1+len_nts] = np.flipud(new_nts)
+###        POINT[i] = POINT[i]+len_nts
+###
+###    return [samples, STACK, POINT]
 
 
 
@@ -88,10 +77,10 @@ class GRUPrev(GRU):
 
         self.dim = dim
         self.X = X
-        shape = K.int_shape(self.X)
+        ###shape = K.int_shape(self.X)
 
-        self.STACK = K.variable(np.zeros((shape[0],shape[1])))
-        self.POINT = K.variable(np.zeros((shape[0])))
+        ###self.STACK = K.variable(np.zeros((shape[0],shape[1])))
+        ###self.POINT = K.variable(np.zeros((shape[0])))
 
 
     def build(self, input_shape):
@@ -111,9 +100,9 @@ class GRUPrev(GRU):
         #self.STACK[:] = 0.0 # when we see new data, zero out stack and pointer
         #self.POINT[:] = 0.0
 
-        shape = K.int_shape(self.X)
-        self.STACK = K.variable(np.zeros((shape[0],shape[1])))
-        self.POINT = K.variable(np.zeros((shape[0])))
+        ###shape = K.int_shape(self.X)
+        ###self.STACK = K.variable(np.zeros((shape[0],shape[1])))
+        ###self.POINT = K.variable(np.zeros((shape[0])))
 
         if self.consume_less == 'cpu':
             input_shape = K.int_shape(x)
@@ -155,7 +144,7 @@ class GRUPrev(GRU):
             x_h = matrix_x[:, 2 * self.output_dim:]
             inner_h = K.dot(r * h_tm1 * B_U[0], self.U[:, 2 * self.output_dim:])
             # NEW! don't do dropout for now
-            prev_h = K.dot(from_last_time, self.Y)
+            prev_h = K.dot(r * from_last_time, self.Y)
 
             hh = self.activation(x_h + inner_h + prev_h)
         else:
@@ -173,12 +162,14 @@ class GRUPrev(GRU):
             r = self.inner_activation(x_r + K.dot(h_tm1 * B_U[1], self.U_r))
 
             # NEW! don't do dropout for now
-            prev_h = K.dot(from_last_time, self.Y)
+            prev_h = K.dot(r * from_last_time, self.Y)
 
             hh = self.activation(x_h + K.dot(r * h_tm1 * B_U[2], self.U_h) + prev_h)
         h = z * h_tm1 + (1 - z) * hh
         ## make sure to not always use training data! HERERERE TODO
         to_next_time = mask_samples(h, train_data, self.dim)
+
+
         #if K.learning_phase() == 0:
         #    [A,B,C] = tf.py_func(cond_sample_np, [h, self.STACK, self.POINT, masks_K, rhs_map_K], tf.float32)
         #    SAMP = list_of_t[0]
@@ -188,4 +179,4 @@ class GRUPrev(GRU):
 
         #to_next_time = K.in_train_phase(mask_samples(h, train_data, self.dim),SAMP) 
         #return h, [h, to_next_time]
-        return to_next_time, [h, to_next_time]
+        return to_next_time, [h, train_data] #to_next_time]
