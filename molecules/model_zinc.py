@@ -10,7 +10,7 @@ from keras.layers.convolutional import Convolution1D
 #from terminalgru import TerminalGRU
 #from recurrentshop import*
 import tensorflow as tf
-import zinc_grammar as G
+import grammar.zinc_grammar as G
 
 # helper variables in Keras format for parsing the grammar
 masks_K      = K.variable(G.masks)
