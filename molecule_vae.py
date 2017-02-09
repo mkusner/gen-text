@@ -4,6 +4,10 @@ import numpy as np
 import grammar.zinc_grammar
 import molecules.model_zinc
 
+import molecules.model
+
+
+
 def get_zinc_tokenizer(cfg):
     long_tokens = filter(lambda a: len(a) > 1, cfg._lexical_index.keys())
     replacements = ['$','%','^','&']
@@ -77,7 +81,8 @@ class ZincGrammarModel(object):
         return self.vae.encoderMV.predict(one_hot)[0]
 
     def _sample_using_masks(self, unmasked):
-        """ Samples a one-hot vector, masking at each timestep """
+        """ Samples a one-hot vector, masking at each timestep.
+            This is an implementation of Algorithm ? in the paper. """
         eps = 1e-100
     #     ln_p = np.zeros((unmasked.shape[0],))
         X_hat = np.zeros_like(unmasked)
@@ -107,6 +112,7 @@ class ZincGrammarModel(object):
         return X_hat # , ln_p
 
     def decode(self, z):
+        """ Sample from the grammar decoder """
         assert z.ndim == 2
         unmasked = self.vae.decoder.predict(z)
         X_hat = self._sample_using_masks(unmasked)
@@ -115,3 +121,38 @@ class ZincGrammarModel(object):
                      for t in xrange(X_hat.shape[1])] 
                     for index in xrange(X_hat.shape[0])]
         return [prods_to_eq(prods) for prods in prod_seq]
+
+
+
+class ZincCharacterModel(object):
+
+    def __init__(self, weights_file, latent_rep_size=56):
+        self._model = molecules.model
+        self.MAX_LEN = 120
+        self.vae = self._model.MoleculeVAE()
+        self.charlist = [" ", "#", "(", ")", "+", "-", "/", "1", "2", "3", "4", "5", "6", "7",
+                         "8", "=", "@", "B", "C", "F", "H", "I", "N", "O", "P", "S", "[", "\\", "]",
+                         "c", "l", "n", "o", "r", "s"]
+        self._char_index = {}
+        for ix, char in enumerate(self.charlist):
+            self._char_index[char] = ix
+        self.vae.load(self.charlist, weights_file, max_length=self.MAX_LEN, latent_rep_size=latent_rep_size)
+
+    def encode(self, smiles):
+        """ Encode a list of smiles strings into the latent space """
+        indices = [np.array([self._char_index[c] for c in entry], dtype=int) for entry in smiles]
+        one_hot = np.zeros((len(indices), self.MAX_LEN, len(self.charlist)), dtype=np.float32)
+        for i in xrange(len(indices)):
+            num_productions = len(indices[i])
+            one_hot[i][np.arange(num_productions),indices[i]] = 1.
+            one_hot[i][np.arange(num_productions, self.MAX_LEN),-1] = 1.
+        return self.vae.encoderMV.predict(one_hot)[0]
+
+    def decode(self, z):
+        """ Sample from the character decoder """
+        assert z.ndim == 2
+        out = self.vae.decoder.predict(z)
+        noise = np.random.gumbel(size=out.shape)
+        sampled_chars = np.argmax(np.log(out) + noise, axis=-1)
+        char_matrix = np.array(self.charlist)[np.array(sampled_chars, dtype=int)]
+        return [''.join(ch) for ch in char_matrix]
