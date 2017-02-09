@@ -130,9 +130,9 @@ class ZincCharacterModel(object):
         self._model = molecules.model
         self.MAX_LEN = 120
         self.vae = self._model.MoleculeVAE()
-        self.charlist = [" ", "#", "(", ")", "+", "-", "/", "1", "2", "3", "4", "5", "6", "7",
-                         "8", "=", "@", "B", "C", "F", "H", "I", "N", "O", "P", "S", "[", "\\", "]",
-                         "c", "l", "n", "o", "r", "s"]
+        self.charlist = ['C', '(', ')', 'c', '1', '2', 'o', '=', 'O', 'N', '3', 'F', '[',
+                         '@', 'H', ']', 'n', '-', '#', 'S', 'l', '+', 's', 'B', 'r', '/',
+                         '4', '\\', '5', '6', '7', 'I', 'P', '8', ' ']
         self._char_index = {}
         for ix, char in enumerate(self.charlist):
             self._char_index[char] = ix
@@ -155,4 +155,4 @@ class ZincCharacterModel(object):
         noise = np.random.gumbel(size=out.shape)
         sampled_chars = np.argmax(np.log(out) + noise, axis=-1)
         char_matrix = np.array(self.charlist)[np.array(sampled_chars, dtype=int)]
-        return [''.join(ch) for ch in char_matrix]
+        return [''.join(ch).strip() for ch in char_matrix]
