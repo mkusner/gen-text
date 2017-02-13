@@ -4,7 +4,7 @@ from nltk import grammar, parse
 import pdb
 import re
 from molecules.utils import many_one_hot
-import zinc_grammar
+import grammar.zinc_grammar as zinc_grammar
 import numpy as np
 import h5py
 import six
@@ -119,7 +119,8 @@ parser = nltk.ChartParser(gr)
 ##    print('going')
 ##    print(tree)
 ##pdb.set_trace()
-rules = zinc_grammar.p.split('\n')
+R = ['C[C@@H]1CN(C(=O)c2cc(Br)cn2C)CC[C@H]1[NH3+]', 'CC[NH+](CC)[C@](C)(CC)[C@H](O)c1cscc1Br', 'O=C(Nc1nc[nH]n1)c1cccnc1Nc1cccc(F)c1', 'Cc1c(/C=N/c2cc(Br)ccn2)c(O)n2c(nc3ccccc32)c1C#N']
+rules = zinc_grammar.gram.split('\n')
 
 OH = np.zeros((len(R),277,len(rules)))
 ##L2 = ['COc1ccc2[C@@H]3ClcccBrcc']
@@ -184,6 +185,9 @@ for chem in R:
     OH[total_count,:,:] = many_one_hot(np.array(inds), len(rules)) # (7,17)
     total_count = total_count + 1
 pdb.set_trace()
+
+
+
 h5f = h5py.File('zinc_dataset.h5','w')
 h5f.create_dataset('data', data=OH)
 h5f.close()
