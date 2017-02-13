@@ -62,7 +62,7 @@ bond -> '-'
 bond -> '='
 bond -> '#'
 bond -> '/'
-bond -> '\\\\'
+bond -> '\\'
 ringbond -> DIGIT
 ringbond -> bond DIGIT
 branched_atom -> atom
