@@ -14,7 +14,7 @@ T -> 'x'
 T -> '1'
 T -> '2'
 T -> '3'
-Q -> Nothing"""
+Nothing -> None"""
 
 
 GCFG = nltk.CFG.fromstring(gram)
