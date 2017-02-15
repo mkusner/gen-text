@@ -42,7 +42,10 @@ def prods_to_eq(prods):
             if s == prod.lhs():
                 seq = seq[:ix] + list(prod.rhs()) + seq[ix+1:]
                 break
-    return ''.join(seq)
+    try:
+        return ''.join(seq)
+    except:
+        return ''
 
 
 
@@ -116,6 +119,15 @@ class ZincGrammarModel(object):
         assert z.ndim == 2
         unmasked = self.vae.decoder.predict(z)
         X_hat = self._sample_using_masks(unmasked)
+        MAX_RETRIES = 10
+        num_retries = 0
+        while X_hat[:,-1,-1].sum() < X_hat.shape[0]:
+            need_resampled = X_hat[:,-1,-1] == 0
+            if num_retries > MAX_RETRIES:
+                break
+            assert X_hat[needs_resampled].shape == (int(needs_resampled.sum()), X_hat.shape[1], X_hat.shape[2])
+            X_hat[needs_resampled] = self._sample_using_masks[needs_resampled]
+            num_retries += 1
         # Convert from one-hot to sequence of production rules
         prod_seq = [[self._productions[X_hat[index,t].argmax()] 
                      for t in xrange(X_hat.shape[1])] 
