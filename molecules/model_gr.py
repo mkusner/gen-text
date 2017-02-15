@@ -27,8 +27,10 @@ class MoleculeVAE():
                charset,
                max_length = MAX_LEN,
                latent_rep_size = 2,
+               hypers = {'hidden': 50, 'dense': 50, 'conv1': 1, 'conv2': 2, 'conv3': 3},
                weights_file = None):
         charset_length = len(charset)
+        self.hypers = hypers
         
         x = Input(shape=(max_length, charset_length))
         _, z = self._buildEncoder(x, latent_rep_size, max_length)
@@ -75,11 +77,11 @@ class MoleculeVAE():
 
 
     def _encoderMeanVar(self, x, latent_rep_size, max_length, epsilon_std = 0.01):
-        h = Convolution1D(1, 1, activation = 'relu', name='conv_1')(x) # used to be 2, 1
-        h = Convolution1D(2, 2, activation = 'relu', name='conv_2')(h) # used to be 2, 1
-        h = Convolution1D(3, 3, activation = 'relu', name='conv_3')(h) # used to be 3
+        h = Convolution1D(self.hypers['conv1'], self.hypers['conv1'], activation = 'relu', name='conv_1')(x) # used to be 2, 1
+        h = Convolution1D(self.hypers['conv2'], self.hypers['conv2'], activation = 'relu', name='conv_2')(h) # used to be 2, 1
+        h = Convolution1D(self.hypers['conv3'], self.hypers['conv3'], activation = 'relu', name='conv_3')(h) # used to be 3
         h = Flatten(name='flatten_1')(h)
-        h = Dense(50, activation = 'relu', name='dense_1')(h) # used to be 100, 30, 50, 200
+        h = Dense(self.hypers['dense'], activation = 'relu', name='dense_1')(h) # used to be 100, 30, 50, 200
 
         z_mean = Dense(latent_rep_size, name='z_mean', activation = 'linear')(h)
         z_log_var = Dense(latent_rep_size, name='z_log_var', activation = 'linear')(h)
@@ -87,11 +89,12 @@ class MoleculeVAE():
         return (z_mean, z_log_var) 
 
     def _buildEncoder(self, x, latent_rep_size, max_length, epsilon_std = 0.01):
-        h = Convolution1D(1, 1, activation = 'relu', name='conv_1')(x) # used to be 2, 1
-        h = Convolution1D(2, 2, activation = 'relu', name='conv_2')(h) # used to be 2, 1
-        h = Convolution1D(3, 3, activation = 'relu', name='conv_3')(h) # used to be 3
+
+        h = Convolution1D(self.hypers['conv1'], self.hypers['conv1'], activation = 'relu', name='conv_1')(x) # used to be 2, 1
+        h = Convolution1D(self.hypers['conv2'], self.hypers['conv2'], activation = 'relu', name='conv_2')(h) # used to be 2, 1
+        h = Convolution1D(self.hypers['conv3'], self.hypers['conv3'], activation = 'relu', name='conv_3')(h) # used to be 3
         h = Flatten(name='flatten_1')(h)
-        h = Dense(50, activation = 'relu', name='dense_1')(h) # used to be 100, 30, 50, 200
+        h = Dense(self.hypers['dense'], activation = 'relu', name='dense_1')(h) # used to be 100, 30, 50, 200
 
         def sampling(args):
             z_mean_, z_log_var_ = args
@@ -126,9 +129,9 @@ class MoleculeVAE():
     def _buildDecoder(self, z, latent_rep_size, max_length, charset_length):
         h = Dense(latent_rep_size, name='latent_input', activation = 'relu')(z)
         h = RepeatVector(max_length, name='repeat_vector')(h)
-        h = GRU(50, return_sequences = True, name='gru_1')(h)
-        h = GRU(50, return_sequences = True, name='gru_2')(h)
-        h = GRU(50, return_sequences = True, name='gru_3')(h) # all above used to be 100, 30, 50, 200
+        h = GRU(self.hypers['hidden'], return_sequences = True, name='gru_1')(h)
+        h = GRU(self.hypers['hidden'], return_sequences = True, name='gru_2')(h)
+        h = GRU(self.hypers['hidden'], return_sequences = True, name='gru_3')(h) # all above used to be 100, 30, 50, 200
         return TimeDistributed(Dense(charset_length), name='decoded_mean')(h)
         #h = SpecialLayer(charset_length, activation='softmax'), name='decoded_mean')(h)
         ####rc = RecurrentContainer(readout=True) #, unroll=True, input_length=max_length)
@@ -142,5 +145,5 @@ class MoleculeVAE():
     def save(self, filename):
         self.autoencoder.save_weights(filename)
     
-    def load(self, charset, weights_file, latent_rep_size = 2, max_length=MAX_LEN):
-        self.create(charset, max_length = max_length, weights_file = weights_file, latent_rep_size = latent_rep_size)
+    def load(self, charset, weights_file, latent_rep_size = 2, max_length=MAX_LEN, hypers = {'hidden': 50, 'dense': 50, 'conv1': 1, 'conv2': 2, 'conv3': 3}):
+        self.create(charset, max_length = max_length, weights_file = weights_file, latent_rep_size = latent_rep_size, hypers = hypers)
