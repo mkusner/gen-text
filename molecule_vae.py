@@ -122,7 +122,7 @@ class ZincGrammarModel(object):
         MAX_RETRIES = 10
         num_retries = 0
         while X_hat[:,-1,-1].sum() < X_hat.shape[0]:
-            need_resampled = X_hat[:,-1,-1] == 0
+            needs_resampled = X_hat[:,-1,-1] == 0
             if num_retries > MAX_RETRIES:
                 break
             assert X_hat[needs_resampled].shape == (int(needs_resampled.sum()), X_hat.shape[1], X_hat.shape[2])
