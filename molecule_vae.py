@@ -7,7 +7,6 @@ import molecules.model_zinc
 import molecules.model
 
 
-
 def get_zinc_tokenizer(cfg):
     long_tokens = filter(lambda a: len(a) > 1, cfg._lexical_index.keys())
     replacements = ['$','%','^'] # ,'&']

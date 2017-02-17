@@ -67,7 +67,7 @@ def main():
     #args = get_arguments()
     #data_train, data_test, charset = load_dataset(args.data)
 
-    params = {'hidden': 200, 'dense': 200, 'conv1': 2, 'conv2': 2, 'conv3': 3}
+    params = {'hidden': 200, 'dense': 200, 'conv1': 2, 'conv2': 3, 'conv3': 4}
 
     model_save = '/Users/matthewkusner/Dropbox/gen-text/results/eq_prev_train_vae_h50_c123_cond_L' + str(args.latent_dim) + '.hdf5'
     model_save = '/Users/matthewkusner/Dropbox/gen-text/results/eq_vae_grammar_h' + str(params['hidden']) + '_c123_L' + str(args.latent_dim) + '_E' + str(args.epochs) + '.hdf5'
@@ -84,7 +84,7 @@ def main():
 
     reduce_lr = ReduceLROnPlateau(monitor = 'val_loss',
                                   factor = 0.2,
-                                  patience = 3,
+                                  patience = 1,
                                   min_lr = 0.0001)
 
     model.autoencoder.fit(

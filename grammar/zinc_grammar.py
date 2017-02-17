@@ -110,7 +110,6 @@ count = 0
 #all_lhs.append(0)
 for sym in lhs_list:
     is_in = np.array([a == sym for a in all_lhs], dtype=int).reshape(1,-1)
-    #pdb.set_trace()
     masks[count] = is_in
     count = count + 1
 
@@ -118,4 +117,7 @@ index_array = []
 for i in range(masks.shape[1]):
     index_array.append(np.where(masks[:,i]==1)[0][0])
 ind_of_ind = np.array(index_array)
-#pdb.set_trace()
+
+# fix so class never can be selected as a rule
+masks[:,29] = 0
+masks[:,31] = 0
