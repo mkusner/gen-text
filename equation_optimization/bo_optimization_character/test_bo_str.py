@@ -3,6 +3,13 @@ import pickle
 import gzip
 import pdb
 
+import sys
+# sys.path.insert(0, '../')
+# import molecule_vae
+sys.path.insert(0, '../../')
+import equation_vae
+diff_model = equation_vae.EquationGrammarModel("/home/mjk379/keras-molecules/data/results/eq_vae_grammar_h200_c234_L10_E50_batchB.hdf5",10)
+
 def decode_from_latent_space(latent_points, grammar_model):
 
     decode_attempts = 500
@@ -17,8 +24,14 @@ def decode_from_latent_space(latent_points, grammar_model):
         rdkit_molecules.append([])
         for j in range(latent_points.shape[ 0 ]):
             smile = np.array([ decoded_molecules[ i ][ j ] ]).astype('str')[ 0 ]
+            ##try:
+            ##    res = eval(smile)
+            ##    rdkit_molecules[ i ].append(smile)
+            ##except:
+            ##    rdkit_molecules[i].append(None)
+            tokens = equation_vae.tokenize(smile)
             try:
-                res = eval(smile)
+                parse = diff_model._parser.parse(tokens).next()
                 rdkit_molecules[ i ].append(smile)
             except:
                 rdkit_molecules[i].append(None)
@@ -79,8 +92,8 @@ np.random.seed(1)
 # X = np.loadtxt('latent_features_and_targets/latent_faetures.txt')
 # y = -np.loadtxt('latent_features_and_targets/targets.txt')
 # y = y.reshape((-1, 1))
-X = np.loadtxt('latent_features_and_targets/latent_features_eq.txt')
-y = np.loadtxt('latent_features_and_targets/targets_eq.txt')
+X = np.loadtxt('latent_features_and_targets/latent_features_eq_batchB.txt')
+y = np.loadtxt('latent_features_and_targets/targets_eq_batchB.txt')
 y = y.reshape((-1, 1))
 
 
@@ -124,14 +137,10 @@ for iteration in range(100):
     import copy
     import time
 
-    import sys
-    # sys.path.insert(0, '../')
-    # import molecule_vae
-    sys.path.insert(0, '../../')
-    import equation_vae
     # grammar_weights = "../weight_files/zinc_vae_L56.hdf5"
     # grammar_model = molecule_vae.ZincGrammarModel(grammar_weights)
     grammar_weights = "../../eq_vae_h50_c123_str_L10.hdf5" #weight_files/zinc_vae_L56.hdf5"
+    grammar_weights = "/home/mjk379//keras-molecules/data/results/eq_vae_str_h200_c234_L10_E50_batchB.hdf5" #   ../../eq_vae_h50_c123_str_L10.hdf5" #weight_files/zinc_vae_L56.hdf5"
     grammar_model = equation_vae.EquationCharacterModel(grammar_weights,latent_rep_size=10)
 
 
@@ -153,7 +162,7 @@ for iteration in range(100):
     new_features = np.array(new_features)
     valid_eq_final = valid_eq_final_final
 
-    save_object(valid_eq_final, "results_gp_multiple_iterations/valid_eq{}.dat".format(iteration))
+    save_object(valid_eq_final, "results_gp_multiple_iterations/valid_eq_parse_batchB{}.dat".format(iteration))
 
     # logP_values = np.loadtxt('latent_features_and_targets/logP_values.txt')
     # SA_scores = np.loadtxt('latent_features_and_targets/SA_scores.txt')
@@ -167,8 +176,8 @@ for iteration in range(100):
     # import sascorer
     # import networkx as nx
     # from rdkit.Chem import rdmolops
-    x = np.loadtxt('latent_features_and_targets/x_eq.txt')
-    y = np.loadtxt('latent_features_and_targets/true_y_eq.txt')
+    x = np.loadtxt('latent_features_and_targets/x_eq_batchB.txt')
+    y = np.loadtxt('latent_features_and_targets/true_y_eq_batchB.txt')
 
     scores = []
     for i in range(len(valid_eq_final)):
@@ -200,7 +209,7 @@ for iteration in range(100):
     print(valid_eq_final)
     print(scores)
 
-    save_object(scores, "results_gp_multiple_iterations/scores{}.dat".format(iteration))
-
-    X_train = np.concatenate([ X_train, new_features ], 0)
-    y_train = np.concatenate([ y_train, np.array(scores)[ :, None ] ], 0)
+    save_object(scores, "results_gp_multiple_iterations/scores_parse_batchB{}.dat".format(iteration))
+    if len(new_features) > 0:
+        X_train = np.concatenate([ X_train, new_features ], 0)
+        y_train = np.concatenate([ y_train, np.array(scores)[ :, None ] ], 0)
