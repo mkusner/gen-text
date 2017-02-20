@@ -24,6 +24,8 @@ from scipy.stats import multivariate_normal
 import zinc_grammar as G
 #from rdkit import Chem
 
+from rdkit import Chem
+import molecule_vae
 
 
 rules = G.gram.split('\n')
@@ -223,7 +225,6 @@ def importance_ll(model, filename, XTE, args, mask_flag):
         MAX = np.max(log_imp)
         # from: http://blog.smola.org/post/987977550/log-probabilities-semirings-and-floating-point
         log_like = np.log(np.sum(np.exp(log_imp - MAX))) + MAX
-        pdb.set_trace()
         #pXZ = np.mean(np.sum(soft_mask * XTEi, axis=-1),axis=-1)
         #pXZ = np.prod(np.sum(soft_mask * XTEi, axis=-1),axis=-1)
         #like = np.mean((pXZ * pZ) / qZX)
@@ -281,10 +282,11 @@ def full_ll_savestr(model, filename, XTE, args):
     #I = range(1000*10*MAX_LEN)
     ll = np.zeros((ne,))
 
-    ALL_STRINGS = np.chararray((5000,1000), itemsize=1000)
+    ##ALL_STRINGS = np.chararray((5000,1000), itemsize=1000)
     for i in range(ne):
         print('i=' + str(i) + ' out of 5000')
         XTEi = XTE[i].reshape((1,MAX_LEN, DIM))
+
         many = np.repeat(XTEi, 10, axis=0)
         Z = model.encoder.predict(many)
         unnorm = model.decoder.predict(Z) # (10,MAX_LEN,DIM)
@@ -293,21 +295,32 @@ def full_ll_savestr(model, filename, XTE, args):
 #        masked = masked.reshape((1,10,MAX_LEN,DIM)) 
         samples = np.zeros((1000,MAX_LEN,DIM))
 
-        STR_XTEi = get_strings2(XTEi)
+        AA = np.where(XTE[i,:]==1)[1]
+        if DIM-1 in AA:
+            BB = np.where(AA == DIM-1)[0][0]
+            XTEnoQ = XTE[i,:BB].reshape((1,BB,DIM))
+        else:
+            XTEnoQ = XTE[i].reshape((1,MAX_LEN,DIM))
+            BB = MAX_LEN
+        
+        #STR_XTEi = get_strings2(XTEi)
         CORR = np.zeros((1000,))
-        STRINGS = np.chararray((1000,), itemsize=1000)
+        #STRINGS = np.chararray((1000,), itemsize=1000)
         for j in range(100):
             samples[(j*10):(j+1)*10] = cond_sample(unnorm)
-            STRINGS[(j*10):(j+1)*10] = get_strings2(samples[(j*10):(j+1)*10])
-         
-        for jj in range(1000):
-            CORR[jj] = float(STR_XTEi == STRINGS[jj])
-            
-        ALL_STRINGS[i,:] = STRINGS
-        ll[i] = np.mean(CORR)
+            #STRINGS[(j*10):(j+1)*10] = get_strings2(samples[(j*10):(j+1)*10])
+        combined = np.sum(samples[:,:BB,:] * XTEnoQ,axis=-1)
+        ll[i] = np.mean(np.all(combined,axis=-1))
+        ##for jj in range(1000):
+        ##    CORR[jj] = float(STR_XTEi == STRINGS[jj])
+        ##pdb.set_trace()    
+        ###ALL_STRINGS[i,:] = STRINGS
+
+        print('mean reconstruct=' + str(np.mean(ll[:i+1])))
          
 
-    return (ll,ALL_STRINGS)
+    ##return (ll,ALL_STRINGS)
+    return ll
 
 
 def full_ll(model, filename, XTE, args):
@@ -353,6 +366,46 @@ def full_ll(model, filename, XTE, args):
 
 
 
+def how_valid(model, filename, args):
+
+    ##if os.path.isfile(filename):
+    ##    model.load(rules, filename, latent_rep_size = args.latent_dim, max_length=MAX_LEN)
+    ##else:
+    ##    raise ValueError("Model file %s doesn't exist" % filename)
+
+    model = molecule_vae.ZincGrammarModel(filename)
+
+    np.random.seed(0)
+    samples =  np.random.multivariate_normal(np.zeros(args.latent_dim,), np.eye(args.latent_dim), 1000)
+    VALID = np.zeros((1000,500))
+    for i in range(500):
+        strs = model.decode(samples)
+        for j in range(1000):
+            mol = Chem.MolFromSmiles(strs[j])
+            if mol:
+                VALID[j,i] = 1
+            else:
+                VALID[j,i] = 0
+    return VALID 
+
+
+    ##    samples = np.zeros((1000,MAX_LEN,DIM))
+    ##    for j in range(100):
+    ##        samples[(j*10):(j+1)*10] = cond_sample(unnorm)
+
+    ##count = 0 
+    ##for j in range(10):
+    ##    unnorm = model.decoder.predict(samples[(j*1000):(j+1)*1000])
+    ##    x_cond = cond_sample(unnorm)
+    ##    x_string = get_strings2(x_cond) # 100
+    ##    for k in range(1000):
+    ##        mol = Chem.MolFromSmiles(x_string[k])
+    ##        if mol:
+    ##            VALID[count] = 1
+    ##        else:
+    ##            VALID[count] = 0
+    ##        count = count + 1
+    ##return VALID
 
 
 def main():
@@ -370,33 +423,45 @@ def main():
         filename = 'results/zinc_vae_L292_50?.hdf5'
     else:
         filename = 'results/zinc_vae_L' + str(args.latent_dim) + '.hdf5'
+        #filename = 'results/zinc_vae_again_L56_E100_val.hdf5'
 
     print(filename)
 
+    save_valid = 'results/valid_zinc_L' + str(args.latent_dim) + '_E100_new_code.p'
+    save_valid = 'results/valid_zinc_L' + str(args.latent_dim) + '_new_code.p'
 
-    save_full = 'results/acc_full_zinc_L' + str(args.latent_dim) + '.p'
-
-#!    if not os.path.exists(save_full):
-    print('running full_ll')
-    acc_full = full_ll(model, filename, XTE, args)
-    print('acc full=', str(np.mean(acc_full)))
-#!        pickle.dump({'acc_full': acc_full}, open(save_full, 'wb')) #open('results/nll_str_equation_L' + str(args.latent_dim) + '.p', 'wb'))
-#!    else:
-#!        print('already ran full_ll')
-
-
-    ###save_full_smiles = 'results/acc_full_smiles_zinc_L' + str(args.latent_dim) + '.p'
-
-    ###if not os.path.exists(save_full_smiles):
-    ###    print('running full_ll smiles')
-    ###    (acc_full_smiles, ALL_STRINGS) = full_ll_savestr(model, filename, XTE, args)
-    ###    print('acc full smiles=', str(np.mean(acc_full_smiles)))
-    ###    pickle.dump({'acc_full_smiles': acc_full_smiles, 'ALL_STRINGS': ALL_STRINGS}, open(save_full_smiles, 'wb')) #open('results/nll_str_equation_L' + str(args.latent_dim) + '.p', 'wb'))
-    ###else:
-    ###    print('already ran full_ll smiles')
+    if not os.path.exists(save_valid):
+        print('running valid')
+        valid = how_valid(model, filename, args)
+        pickle.dump({'valid': valid}, open(save_valid, 'wb'))
+    else:
+        print('already ran valid')
+    pdb.set_trace()
 
 
+    save_full = 'results/acc_full_zinc_L' + str(args.latent_dim) + '_E100.p'
 
+    ##if not os.path.exists(save_full):
+    ##    print('running full_ll')
+    ##    acc_full = full_ll(model, filename, XTE, args)
+    ##    print('acc full=', str(np.mean(acc_full)))
+    ##    pickle.dump({'acc_full': acc_full}, open(save_full, 'wb')) #open('results/nll_str_equation_L' + str(args.latent_dim) + '.p', 'wb'))
+    ##else:
+    ##    print('already ran full_ll')
+    save_full_smiles = 'results/acc_full_smiles_zinc_L' + str(args.latent_dim) + '_E100.p'
+
+    if not os.path.exists(save_full_smiles):
+        print('running full_ll smiles')
+        acc_full_smiles = full_ll_savestr(model, filename, XTE, args)
+        print('acc full smiles=', str(np.mean(acc_full_smiles)))
+        ##pickle.dump({'acc_full_smiles': acc_full_smiles, 'ALL_STRINGS': ALL_STRINGS}, open(save_full_smiles, 'wb')) #open('results/nll_str_equation_L' + str(args.latent_dim) + '.p', 'wb'))
+        pickle.dump({'acc_full_smiles': acc_full_smiles}, open(save_full_smiles, 'wb')) #open('results/nll_str_equation_L' + str(args.latent_dim) + '.p', 'wb'))
+    else:
+        print('already ran full_ll smiles')
+    
+
+
+    ##pdb.set_trace()
     ##save_all_ll =  'results/nll_all_zinc_L' + str(args.latent_dim)
 
     ##if not os.path.exists(save_all_ll + '.p'):
@@ -409,7 +474,7 @@ def main():
 
 
 
-    save_imp = 'results/nll_prod_zinc_L' + str(args.latent_dim)
+    save_imp = 'results/nll_prod_zinc_L' + str(args.latent_dim) + '_E100'
     ###
     ###if not os.path.exists(save_imp + '.p'):
     ###    print('running importance_ll')
@@ -420,13 +485,13 @@ def main():
     ###    print('already ran importance_ll')
 
 
-    #if not os.path.exists(save_imp + '_mask.p'):
-    print('running importance_ll mask')
-    nll = -importance_ll(model, filename, XTE, args, 1)
-    print('nll mask=', str(np.sum(nll)))
-    pickle.dump({'nll': nll}, open(save_imp + '_mask.p' , 'wb'))
-    #else:
-    print('already ran importance_ll mask')
+###    #if not os.path.exists(save_imp + '_mask.p'):
+###    print('running importance_ll mask')
+###    nll = -importance_ll(model, filename, XTE, args, 1)
+###    print('nll mask=', str(np.sum(nll)))
+###    pickle.dump({'nll': nll}, open(save_imp + '_mask.p' , 'wb'))
+###    #else:
+###    print('already ran importance_ll mask')
 
 
 
