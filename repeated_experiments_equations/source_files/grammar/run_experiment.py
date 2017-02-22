@@ -130,6 +130,7 @@ for iteration in range(5):
 
     np.random.seed(args.exp_seed * iteration)
     M = 500
+    sgp = SparseGP(X_train, 0 * X_train, y_train, M)
     sgp.train_via_ADAM(X_train, 0 * X_train, y_train, X_test, X_test * 0,  \
         y_test, minibatch_size = 10 * M, max_iterations = 50, learning_rate = 0.0005)
 
