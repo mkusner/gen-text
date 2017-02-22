@@ -1,9 +1,10 @@
-
+from __future__ import division
 
 #import sascorer
 
 import numpy as np  
 import pdb
+
 
 # We load the smiles data
 
@@ -31,23 +32,34 @@ for i in range(len(eqs)):
 import sys
 sys.path.insert(0, '../../')
 import equation_vae
-grammar_weights = "../../eq_vae_h50_c123_str_L10.hdf5" #weight_files/zinc_vae_L56.hdf5"
-grammar_model = equation_vae.EquationCharacterModel(grammar_weights,latent_rep_size=10)
+character_weights = "../../eq_vae_str_h100_c234_L25_E50_batchB.hdf5" #weight_files/zinc_vae_L56.hdf5"
+character_model = equation_vae.EquationCharacterModel(character_weights,latent_rep_size=25)
 
 #import image
 import copy
 import time
 #import networkx as nx
 
+eqs = eqs[:100000]
+
+WORST = 1000
 targets = []
 for i in range(len(eqs)):
-    #targets.append(np.mean(np.minimum(np.abs(np.array(eval(eqs[i])) - y),100)))
-    targets.append(np.mean(np.minimum(np.abs(np.array(eval(eqs[i])) - y)**2,100)))
+#     targets.append(np.mean(np.minimum(np.abs(np.array(eval(eqs[i])) - y)**2,100)))
+    try:
+        #score = np.log(1+np.mean(np.minimum(np.abs(np.array(eval(eqs[i])) - y)**2,WORST)))
+        score = np.log(1+np.mean(np.minimum((np.array(eval(eqs[i])) - y)**2, WORST)))
+    except:
+        score = np.log(1+WORST)
+    if not np.isfinite(score):
+        score = np.log(1+WORST)
+    print i, eqs[i], score
+    targets.append(score)
 
 targets = np.array(targets)
 #pdb.set_trace()
 
-latent_points = grammar_model.encode(eqs)
+latent_points = character_model.encode(eqs)
 
 # We store the results
 

@@ -265,7 +265,7 @@ class SparseGP:
      
             print('Train error: {} Train ll: {}'.format(training_error, training_ll))
             sys.stdout.flush()
-        pdb.set_trace()
+        #pdb.set_trace()
 
     def get_incumbent(self, grid, lower, upper):
         
